@@ -1,30 +1,23 @@
 #!/bin/ash
 # shellcheck shell=dash
 
-VER_EXISTS=$(curl -s https://api.purpurmc.org/v2/purpur | jq -r --arg VERSION "$MINECRAFT_VERSION" '.versions[] | contains($VERSION)' | grep true)
-LATEST_VERSION=$(curl -s https://api.purpurmc.org/v2/purpur | jq -r '.versions' | jq -r '.[-1]')
 
-if [ "${VER_EXISTS}" = "true" ]; then
-    printf "Version is valid. Using version %s\n" "${MINECRAFT_VERSION}"
-else
-    printf "Using the latest purpur version\n"
+# LeafMC download logic
+if [ "${MINECRAFT_VERSION}" = "latest" ]; then
+    # Get latest version and build
+    LATEST_VERSION=$(curl -s https://api.leafmc.one/v2/projects/leaf | jq -r '.versions[-1]')
     MINECRAFT_VERSION=${LATEST_VERSION}
 fi
 
-BUILD_EXISTS=$(curl -s https://api.purpurmc.org/v2/purpur/"${MINECRAFT_VERSION}" | jq -r --arg BUILD "${BUILD_NUMBER}" '.builds.all | tostring | contains($BUILD)' | grep true)
-LATEST_BUILD=$(curl -s https://api.purpurmc.org/v2/purpur/"${MINECRAFT_VERSION}" | jq -r '.builds.latest')
-
-if [ "${BUILD_EXISTS}" = "true" ]; then
-    printf "Build is valid for version %s. Using build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
-else
-    printf "Using the latest purpur build for version %s\n" "${MINECRAFT_VERSION}"
+if [ "${BUILD_NUMBER}" = "latest" ]; then
+    LATEST_BUILD=$(curl -s https://api.leafmc.one/v2/projects/leaf/versions/${MINECRAFT_VERSION} | jq -r '.builds[-1].build')
     BUILD_NUMBER=${LATEST_BUILD}
 fi
 
-DOWNLOAD_URL=https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/${BUILD_NUMBER}/download
+DOWNLOAD_URL="https://api.leafmc.one/v2/projects/leaf/versions/${MINECRAFT_VERSION}/builds/${BUILD_NUMBER}/downloads/leaf-${MINECRAFT_VERSION}-${BUILD_NUMBER}.jar"
 
 cd /mnt/server || exit
-printf "Downloading Purpur version %s build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
+printf "Downloading LeafMC version %s build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
 
 if [ -f "server.jar" ]; then
     mv server.jar server.jar.old
@@ -39,29 +32,29 @@ if [ ! -d "config" ]; then
 fi
 
 if [ ! -f "server.properties" ]; then
-    curl -o server.properties https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/server.properties
+    curl -o server.properties https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/server.properties
 fi
 
 if [ ! -f "bukkit.yml" ]; then
-    curl -o bukkit.yml https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/bukkit.yml
+    curl -o bukkit.yml https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/bukkit.yml
 fi
 
 if [ ! -f "spigot.yml" ]; then
-    curl -o spigot.yml https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/spigot.yml
+    curl -o spigot.yml https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/spigot.yml
 fi
 
 if [ ! -f "config/paper-global.yml" ]; then
-    curl -o config/paper-global.yml https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/paper-global.yml
+    curl -o config/paper-global.yml https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/paper-global.yml
 fi
 
 if [ ! -f "config/paper-world-defaults.yml" ]; then
-    curl -o config/paper-world-defaults.yml https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/paper-world-defaults.yml
+    curl -o config/paper-world-defaults.yml https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/paper-world-defaults.yml
 fi
 
 if [ ! -f "pufferfish.yml" ]; then
-    curl -o pufferfish.yml https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/pufferfish.yml
+    curl -o pufferfish.yml https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/pufferfish.yml
 fi
 
 if [ ! -f "config/purpur.yml" ]; then
-    curl -o purpur.yml https://raw.githubusercontent.com/pyrohost/optimized-minecraft-egg/main/configs/purpur.yml
+    curl -o purpur.yml https://raw.githubusercontent.com/akaboydeve/optimized-minecraft-egg/main/configs/purpur.yml
 fi
