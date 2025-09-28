@@ -1,23 +1,30 @@
 #!/bin/ash
 # shellcheck shell=dash
 
+VER_EXISTS=$(curl -s https://api.purpurmc.org/v2/purpur | jq -r --arg VERSION "$MINECRAFT_VERSION" '.versions[] | contains($VERSION)' | grep true)
+LATEST_VERSION=$(curl -s https://api.purpurmc.org/v2/purpur | jq -r '.versions' | jq -r '.[-1]')
 
-# LeafMC download logic
-if [ "${MINECRAFT_VERSION}" = "latest" ]; then
-    # Get latest version and build
-    LATEST_VERSION=$(curl -s https://api.leafmc.one/v2/projects/leaf | jq -r '.versions[-1]')
+if [ "${VER_EXISTS}" = "true" ]; then
+    printf "Version is valid. Using version %s\n" "${MINECRAFT_VERSION}"
+else
+    printf "Using the latest purpur version\n"
     MINECRAFT_VERSION=${LATEST_VERSION}
 fi
 
-if [ "${BUILD_NUMBER}" = "latest" ]; then
-    LATEST_BUILD=$(curl -s https://api.leafmc.one/v2/projects/leaf/versions/${MINECRAFT_VERSION} | jq -r '.builds[-1].build')
+BUILD_EXISTS=$(curl -s https://api.purpurmc.org/v2/purpur/"${MINECRAFT_VERSION}" | jq -r --arg BUILD "${BUILD_NUMBER}" '.builds.all | tostring | contains($BUILD)' | grep true)
+LATEST_BUILD=$(curl -s https://api.purpurmc.org/v2/purpur/"${MINECRAFT_VERSION}" | jq -r '.builds.latest')
+
+if [ "${BUILD_EXISTS}" = "true" ]; then
+    printf "Build is valid for version %s. Using build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
+else
+    printf "Using the latest purpur build for version %s\n" "${MINECRAFT_VERSION}"
     BUILD_NUMBER=${LATEST_BUILD}
 fi
 
-DOWNLOAD_URL="https://api.leafmc.one/v2/projects/leaf/versions/${MINECRAFT_VERSION}/builds/${BUILD_NUMBER}/downloads/leaf-${MINECRAFT_VERSION}-${BUILD_NUMBER}.jar"
+DOWNLOAD_URL=https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/${BUILD_NUMBER}/download
 
 cd /mnt/server || exit
-printf "Downloading LeafMC version %s build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
+printf "Downloading Purpur version %s build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
 
 if [ -f "server.jar" ]; then
     mv server.jar server.jar.old
