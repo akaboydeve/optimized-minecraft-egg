@@ -21,7 +21,7 @@ else
     BUILD_NUMBER=${LATEST_BUILD}
 fi
 
-DOWNLOAD_URL=https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/${BUILD_NUMBER}/download
+DOWNLOAD_URL=https://api.leafmc.one/v2/projects/leaf/versions/1.21.4/builds/520/downloads/leaf-1.21.4-520.jar
 
 cd /mnt/server || exit
 printf "Downloading Purpur version %s build %s\n" "${MINECRAFT_VERSION}" "${BUILD_NUMBER}"
